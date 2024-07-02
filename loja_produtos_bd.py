@@ -185,7 +185,7 @@ def adicionarAoCarrinho(conn,id_user): #adiciona produtos ao carrinho
                 else:
                     produto=True  
             else:
-                id_carrinho=create(conn, 'carrinho', {'id_usuario': id_user, 'preco': 0,'qtd': 0,'data': None,'data_update': None,'finalizado':False})
+                id_carrinho=create(conn, 'carrinho', {'id_usuario': id_user, 'preco': 0,'qtd': 0,'data': None,'data_update': None,'finalizado':False,'forma_pagamento': None})
                 produto=True
             if produto:
                 id_itensCarrinho=create(conn, 'itens_carrinho', {'id_carrinho': id_carrinho, 'id_produto': id_produto,'qtd':qtd,'valor_unitario':valor_unitario,'valor_total':valor_total})
@@ -267,8 +267,9 @@ def finalizarCompra(conn,id_user): # finaliza a compra dos itens que esta no car
 
         rp=input(f"Tem certeza que deseja finalizar a compra dos itens do carrinho:(s/n) ").lower()
         if rp=='s':
+            formaPg=input(f"Digite a forma de pagamento: (credito,debito,pix) ").lower()
             dataTime = conn.execute("SELECT datetime('now')").fetchone()[0]
-            update(conn, 'carrinho', {'finalizado': True,'data':dataTime}, {'id': lista_carrinho['id_carrinho']})
+            update(conn, 'carrinho', {'finalizado': True,'data':dataTime,'forma_pagamento':formaPg}, {'id': lista_carrinho['id_carrinho']})
             print("Compra Finalizada com sucesso!")
         else:
             print(f"O id Digitado é inválido!")
