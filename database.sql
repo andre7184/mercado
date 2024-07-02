@@ -1,13 +1,13 @@
 --
--- Arquivo gerado com SQLiteStudio v3.4.4 em seg jul 1 15:38:06 2024
+-- Arquivo gerado com SQLiteStudio v3.4.4 em ter jul 2 10:09:47 2024
 --
--- CodificaÃ§Ã£o de texto usada: System
+-- Codificação de texto usada: System
 --
 PRAGMA foreign_keys = off;
 BEGIN TRANSACTION;
 
 -- Tabela: carrinho
-CREATE TABLE IF NOT EXISTS carrinho (id integer PRIMARY KEY AUTOINCREMENT, id_usuario integer NOT NULL, preco real NOT NULL, qtd INTEGER, data datetime, data_update datetime, finalizado boolean NOT NULL);
+CREATE TABLE IF NOT EXISTS carrinho (id integer PRIMARY KEY AUTOINCREMENT, id_usuario integer NOT NULL, preco real NOT NULL, qtd INTEGER, data datetime, data_update datetime, finalizado boolean NOT NULL, forma_pagamento TEXT);
 
 -- Tabela: itens_carrinho
 CREATE TABLE IF NOT EXISTS itens_carrinho (id integer PRIMARY KEY AUTOINCREMENT, id_carrinho integer NOT NULL, id_produto text NOT NULL, qtd integer NOT NULL, valor_unitario real NOT NULL, valor_total real NOT NULL);
@@ -45,12 +45,13 @@ CREATE VIEW IF NOT EXISTS transacoes AS SELECT
     u.nome AS nome_usuario,
     c.preco AS valor_total_carrinho,
     c.qtd AS quantidade_total_carrinho,
+    c.forma_pagamento AS forma_pagamento_carrinho,
     strftime('%d', c.data) || '/' || 
     strftime('%m', c.data) || '/' || 
     strftime('%Y', c.data) || ' ' ||
     strftime('%H', c.data) || ':' ||
     strftime('%M', c.data) || ':' ||
-    strftime('%S', c.data) AS data_transacao
+    strftime('%S', c.data) AS data_transacao,
     GROUP_CONCAT(ic.id_produto, ',') AS id_produtos,
     GROUP_CONCAT(p.nome, ',') AS produtos,
     GROUP_CONCAT(ic.qtd, ',') AS qtd_produtos,
