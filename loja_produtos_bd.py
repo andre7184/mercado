@@ -164,6 +164,19 @@ def listarUsuario(conn,id_usuario=None): # lista usuarios
             print(f"Id: {linha['id']} - Nome: {linha['nome']} - email: {linha['email']} - Admin: {admin}")
     else:
         print(f"Nenhum usuário encontrado!")
+def removerUsuario(conn):
+    print("---- Remover Usuário ----")
+    id_usuario=int(input("Digite o Id do usuário: "))
+    lista_usuario=read(conn, 'usuario', {'id': id_usuario})
+    if len(lista_usuario)==1:
+        nome=lista_usuario[0]['nome']
+        rp=input(f"Tem certeza que deseja remover o usuario {nome} com id:{id_usuario}:(s/n) ").lower()
+        if rp=='s':
+            delete(conn, 'usuario', {'id': id_usuario})
+            print("Usuário removido com sucesso")
+            
+    else:
+        print(f"O usuário com id:{id_usuario} nao existe!")    
 
 def adicionarAoCarrinho(conn,id_user): #adiciona produtos ao carrinho
     verificaTempoCarrinho(conn,id_user)
@@ -267,7 +280,7 @@ def finalizarCompra(conn,id_user): # finaliza a compra dos itens que esta no car
 
         rp=input(f"Tem certeza que deseja finalizar a compra dos itens do carrinho:(s/n) ").lower()
         if rp=='s':
-            formaPg=input(f"Digite a forma de pagamento: (credito,debito,pix) ").lower()
+            formaPg=input(f"Digite a forma de pagamento: (dinheiro|credito|debito|pix) ").lower()
             dataTime = conn.execute("SELECT datetime('now')").fetchone()[0]
             update(conn, 'carrinho', {'finalizado': True,'data':dataTime,'forma_pagamento':formaPg}, {'id': lista_carrinho['id_carrinho']})
             print("Compra Finalizada com sucesso!")
@@ -279,21 +292,22 @@ def finalizarCompra(conn,id_user): # finaliza a compra dos itens que esta no car
 def historicoTransacoes(conn,id_user=None): # mostra historico de transações, HISTORICO DE COMPRAS para o cliente normal e HISTORICO DE VENDAS para o usuario admin
     if id_user:
         print("---- Histórico de Compras ----")
-        lista_transacoes=read(conn, 'transacoes', {'id_usuario': id_user})
+        lista_transacoes=read(conn, 'transacoes', {'id_usuario': id_user}) # para usuário cliente lista apenas transaçoes do próprio usuario
     else:
         print("---- Histórico de Vendas ----")
-        lista_transacoes=read(conn, 'transacoes')
-    if lista_transacoes:
-        print("__________________________________________________________________")
+        lista_transacoes=read(conn, 'transacoes') # para usuário admin lista transaçoes de todos os usuario
+    if len(lista_transacoes)>0:
+        print(f"{len(lista_transacoes)} Itens:")
+        print("_________________________________________________________________________________")
         for linha in lista_transacoes:
-            print(f"Data: {linha['data_transacao']} - usuario:{linha['nome_usuario']} - Valor Total {formataReal(linha['valor_total_carrinho'])} - qtd itens: {linha['quantidade_total_carrinho']}")
+            print(f"Data: {linha['data_transacao']} - user:{linha['nome_usuario']} - Total {formataReal(linha['valor_total_carrinho'])} - Qtd de rodutos: {linha['quantidade_total_carrinho']} - Forma Pagamento: {linha['forma_pagamento_carrinho']}")
             produtos=linha['produtos'].split(',')
             qtd_produtos=linha['qtd_produtos'].split(',')
             valor_produtos=linha['valor_unitario_produtos'].split(',')
             valor_total_produtos=linha['valor_total_produtos'].split(',')
             for i in range(linha['quantidade_total_carrinho']):
                 print(f" * {produtos[i]} - qtd:{qtd_produtos[i]} - {formataReal(valor_produtos[i])} - {formataReal(valor_total_produtos[i])}")
-            print("__________________________________________________________________")
+            print("_________________________________________________________________________________")
 
     else:
         print(f"Não existem transações!")
@@ -318,6 +332,7 @@ def menuAdmin(): # menu do usuario admin
     4 PARA REMOVER PRODUTO
     5 HISTORICO DE VENDAS
     6 PARA LISTAR USUARIOS
+    7 PARA REMOVER USUARIOS
     0 PARA SAIR
     """
     print(text)
@@ -363,6 +378,7 @@ while True:
     while new:
         menuCadastro()
         entrada=int(input("ENTRE COM UMA OPÇÃO ACIMA: "))
+        print("")
         if entrada==1:
             conn = connect_db()
             lista=cadastrarUsuario(conn)
@@ -384,6 +400,7 @@ while True:
     while admin:
         menuAdmin()
         entrada=int(input("ENTRE COM UMA OPÇÃO ACIMA: "))
+        print("")
         if entrada==1:
             conn = connect_db()
             listarProduto(conn)
@@ -402,6 +419,9 @@ while True:
         elif entrada==6:
             conn = connect_db()
             listarUsuario(conn)
+        elif entrada==7:
+            conn = connect_db()
+            removerUsuario(conn)
         elif entrada==0:
             admin=False
         else:
@@ -409,6 +429,7 @@ while True:
     while auth:
         menuCliente(login)
         entrada=int(input("ENTRE COM UMA OPÇÃO ACIMA: "))
+        print("")
         if entrada==1:
             conn = connect_db()
             listarProduto(conn)
