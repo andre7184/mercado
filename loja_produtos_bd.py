@@ -27,44 +27,41 @@ def read(conn, table, dic_value=None): # conn:variavel conexao banco,table:strin
         cursor = conn.execute(sql)
     rows = cursor.fetchall()
     if rows:
-        # Converta cada linha em um dicionário
-        # Obtenha os nomes das colunas da descrição do cursor
         column_names = [column[0] for column in cursor.description]
-        # Converta cada linha em um dicionário
         dict_rows = [{column: value for column, value in zip(column_names, row)} for row in rows]
         return dict_rows
     else:
         return []
 
-def update(conn, table, dic_values, dic_update): # conn:variavel conexao banco,table:string nome da tabela, dic_value: Dicionario com nome de colunas e valores para buscar na tabela, dic_update: Dicionario com dados (nome coluna e valor) para atualizar a tabela
+def update(conn, table, dic_values, dic_update): 
     set_values = ', '.join(f"{k} = ?" for k in dic_values.keys())
     conditions = ' AND '.join(f"{k} = ?" for k in dic_update.keys())
     sql = f'UPDATE {table} SET {set_values} WHERE {conditions}'
     conn.execute(sql, tuple(list(dic_values.values()) + list(dic_update.values())))
     conn.commit()
 
-def delete(conn, table, dic_value): # conn:variavel conexao banco,table:string nome da tabela, dic_value: Dicionario com nome de colunas e valores para buscar na tabela
+def delete(conn, table, dic_value): 
     conditions = ' AND '.join(f"{k} = ?" for k in dic_value.keys())
     sql = f'DELETE FROM {table} WHERE {conditions}'
     conn.execute(sql, tuple(dic_value.values()))
     conn.commit()
 
-def verificaTempoCarrinho(conn,id_user): # faz a remoção do carrinho caso passe muito tempo sem finalizar a compra
-    resultado = conn.execute("SELECT datetime('now')").fetchone() #pega a data e hora do banco, para não haver diferença de horario
+def verificaTempoCarrinho(conn,id_user): 
+    resultado = conn.execute("SELECT datetime('now')").fetchone() 
     if resultado is not None:
         data_atual=datetime.strptime(resultado[0], '%Y-%m-%d %H:%M:%S')
         ten_minutes_ago = data_atual - timedelta(minutes=tempo_finalizar_carrinho)
         lista_carrinho=read(conn, 'carrinho', {'id_usuario': id_user,'finalizado':0})
         if len(lista_carrinho)==1:
             id_carrinho=lista_carrinho[0]['id']
-            data_update=datetime.strptime(lista_carrinho[0]['data_update'], '%Y-%m-%d %H:%M:%S') # pega ultima data atualizada do carrinho
+            data_update=datetime.strptime(lista_carrinho[0]['data_update'], '%Y-%m-%d %H:%M:%S') 
             if data_update < ten_minutes_ago: 
                 delete(conn, 'itens_carrinho', {'id_carrinho': id_carrinho}) # caso nao foi feito nenhuma alteração no carrinho remove ele
 
-def formataReal(valor): #formata os valores em real
+def formataReal(valor): 
     return 'R$ {:,.2f}'.format(float(valor)).replace('.', '#').replace(',', '.').replace('#', ',')
 
-def cadastrarProduto(conn): #cadastra produtos
+def cadastrarProduto(conn): 
     print("---- Cadastrar Produto ----")
     nome=input("Digite o nome do produto: ")
     lista_produtos=read(conn, 'produtos', {'nome': nome})
@@ -76,7 +73,7 @@ def cadastrarProduto(conn): #cadastra produtos
     else:
         print(f"O produto com nome '{nome}' já esta cadastrado!")
 
-def alterarProduto(conn): #atualiza produtos
+def alterarProduto(conn): 
     print("---- Alterar Produto ----")
     id_produto=int(input("Digite o Id do produto: "))
     lista_produtos=read(conn, 'produtos', {'id': id_produto})
@@ -101,7 +98,7 @@ def alterarProduto(conn): #atualiza produtos
     else:
         print(f"o produto com id:{id_produto} nao existe!")
 
-def removerProduto(conn): #remove produtos
+def removerProduto(conn): 
     print("---- Remover Produto ----")
     id_produto=int(input("Digite o Id do produto: "))
     lista_produtos=read(conn, 'produtos', {'id': id_produto})
@@ -123,7 +120,7 @@ def removerProduto(conn): #remove produtos
     else:
         print(f"O produto  com id:{id_produto} nao existe!")
 
-def listarProduto(conn): #lista produtos
+def listarProduto(conn): 
     print("---- Listar Produtos ----")
     lista_produtos=read(conn, 'produtos')
     if len(lista_produtos)>0:
@@ -132,7 +129,7 @@ def listarProduto(conn): #lista produtos
     else:
         print(f"Nenhum produto encontrado!")
 
-def cadastrarUsuario(conn): # cadatra usuario
+def cadastrarUsuario(conn): 
     print("---- CADASTRAR USUÁRIO ----")
     nome=input("Digite o nome: ")
     email=input("Digite o login (e-mail): ").lower()
@@ -144,12 +141,12 @@ def cadastrarUsuario(conn): # cadatra usuario
         if senha_admin==senhaAdmin:
             adm=True
     id=create(conn, 'usuario', {'nome': nome, 'email': email,'senha':senha,'admin':adm})
-    if id: # retorna em lista os dados do usuario e a autenticação se caso sucesso
+    if id: 
         return [True,id,adm] 
     else:
         return [False,0,adm]
 
-def listarUsuario(conn,id_usuario=None): # lista usuarios
+def listarUsuario(conn,id_usuario=None): 
     print("---- Listar Usuários ----")
     if id_usuario:
         lista_usuarios=read(conn, 'usuario',{'id': id_usuario})
